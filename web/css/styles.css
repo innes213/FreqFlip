@@ -1,0 +1,9 @@
+#dropArea {
+	height: 100px;
+	width: 100px;
+	background-color: blue;
+}
+
+#canvas {
+	height: 300px;
+	width: 200px;
