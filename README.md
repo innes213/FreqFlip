@@ -1,6 +1,6 @@
 # FreqFlip
 
-This shifts the spectrom of an audio signal by pi, effectively flipping the spectrum.
+This shifts the spectrom of an audio signal by half the sampling frequency, effectively flipping the spectrum using a nifty time-domain trick..
 
 Currently hosted here:
 
