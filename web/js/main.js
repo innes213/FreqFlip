@@ -7,9 +7,7 @@ const CANVAS_HEIGHT = canvas.height;
 const CANVAS_WIDTH = canvas.width;
 const SPACER_WIDTH = 1;
 const COL_WIDTH = 3;
-const BUFFER_SIZE = 2048;
-const COEFS = [1, 1, -1, -1];
-var multiplier = [];
+const BUFFER_LENGTH = 2048;
 
 var context = new (window.AudioContext || window.webkitAudioContext)();
 var source;
@@ -17,18 +15,21 @@ var processor;
 var analyser;
 var xhr;
 
+var multipluer = [];
+
 function buildMultiplier() {
-	while (multiplier.length < BUFFER_SIZE) {
-		multiplier = multiplier.concat(COEFS);
+	var i = 1;
+	while (multipluer.length > BUFFER_LENGTH) {
+		multipluer.concat([i]);
+		i = i * -1;
 	}
-	console.log(multiplier);
 }
 
 function initAudio(data) {
 	buildMultiplier();
 	source = context.createBufferSource();
 
-	if(context.decodeAudioData) {
+	if (context.decodeAudioData) {
 		context.decodeAudioData(data, function(buffer) {
 			source.buffer = buffer;
 			createAudio();
@@ -42,19 +43,31 @@ function initAudio(data) {
 }
 
 function createAudio() {
-	processor = context.createJavaScriptNode(BUFFER_SIZE /*bufferSize*/, 1 /*num inputs*/, 1 /*num outputs*/);
-	processor.onaudioprocess = processAudio;
-
+	processor = context.createScriptProcessor(BUFFER_LENGTH, 1, 1);
+	processor.onaudioprocess = freqflipProcess;
 	analyser = context.createAnalyser();
+	analyser.fftSize = 256;
 
-	source.connect(context.destination);
-	source.connect(analyser);
+	source.connect(processor);
+	processor.connect(analyser);
+	analyser.connect(context.destination);
 
-	analyser.connect(processor);
-	processor.connect(context.destination);
-
-	source.noteOn(0);
+	source.start(0);
 	setTimeout(disconnect, source.buffer.duration * 1000 +1000);
+	updateAnimation(0);
+}
+
+function freqflipProcess(e) {
+	var inBuff = e.inputBuffer;
+	var outBuff = e.outputBuffer;
+
+	for (var channel = outBuff.numberOfChannels-1; channel >= 0; channel--) {
+		var input = inBuff.getChannelData(channel);
+		var output = outBuff.getChannelData(channel);
+		for (var n = BUFFER_LENGTH-1; n >= 0; n-- ) {
+			output[n] = input[n] * multipluer[n];
+		}
+	}
 }
 
 function disconnect() {
@@ -64,12 +77,9 @@ function disconnect() {
 	analyser.disconnect(0);
 }
 
-function processAudio(e) {
 
-	for (var i = 0; i < BUFFER_SIZE; i++) {
-		processor.buffer[i] = processAudio(.buffer[i] * multiplier[i];
-	}
 
+function showSpectrum() {
 	var freqByteData = new Uint8Array(analyser.frequencyBinCount);
 	analyser.getByteFrequencyData(freqByteData);
 
@@ -93,6 +103,19 @@ function processAudio(e) {
 
 		ctx.fillRect(i * SPACER_WIDTH, CANVAS_HEIGHT, COL_WIDTH, -magnitude);
 	}
+}
+
+function updateAnimation(time){
+
+	var rAF = window.requestAnimationFrame ||
+			window.webkitRequestAnimationFrame ||
+			window.mozRequestAnimationFrame ||
+			window.msRequestAnimationFrame;
+	rAF( updateAnimation );
+
+	// Place all animation functions here
+	// Update meters
+	showSpectrum();
 }
 
 function dropEvent(evt) {
