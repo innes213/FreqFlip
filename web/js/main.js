@@ -1,5 +1,5 @@
 /*
-Mostly copied from http://jsfiddle.net/gaJyT/18/
+Initially forked from http://jsfiddle.net/gaJyT/18/
 */
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
@@ -15,17 +15,18 @@ var processor;
 var analyser;
 var xhr;
 
-var multipluer = [];
+var multiplier = [];
 
 function buildMultiplier() {
 	var i = 1;
-	while (multipluer.length > BUFFER_LENGTH) {
-		multipluer.concat([i]);
+	while (multiplier.length < BUFFER_LENGTH) {
+		multiplier.push(i);
 		i = i * -1;
 	}
 }
 
 function initAudio(data) {
+	console.log("Initializing audio source");
 	buildMultiplier();
 	source = context.createBufferSource();
 
@@ -43,6 +44,7 @@ function initAudio(data) {
 }
 
 function createAudio() {
+	console.log("Boulding audio graph");
 	processor = context.createScriptProcessor(BUFFER_LENGTH, 1, 1);
 	processor.onaudioprocess = freqflipProcess;
 	analyser = context.createAnalyser();
@@ -50,7 +52,7 @@ function createAudio() {
 
 	source.connect(processor);
 	processor.connect(analyser);
-	analyser.connect(context.destination);
+	processor.connect(context.destination);
 
 	source.start(0);
 	setTimeout(disconnect, source.buffer.duration * 1000 +1000);
@@ -65,13 +67,14 @@ function freqflipProcess(e) {
 		var input = inBuff.getChannelData(channel);
 		var output = outBuff.getChannelData(channel);
 		for (var n = BUFFER_LENGTH-1; n >= 0; n-- ) {
-			output[n] = input[n] * multipluer[n];
+			output[n] = input[n] * multiplier[n];
+			//output[n] = input[n] * -1;
 		}
 	}
 }
 
 function disconnect() {
-	source.noteOff(0);
+	source.stop(0);
 	source.disconnect(0);
 	processor.disconnect(0);
 	analyser.disconnect(0);
@@ -119,26 +122,11 @@ function updateAnimation(time){
 }
 
 function dropEvent(evt) {
+	console.log("File dropped");
 	evt.stopPropagation();
 	evt.preventDefault();
 
 	var droppedFiles = evt.dataTransfer.files;
-
-	/*
-	 var formData = new FormData();
-
-	 for(var i = 0; i < droppedFiles.length; ++i) {
-	 var file = droppedFiles[i];
-
-	 files.append(file.name, file);
-	 }
-
-	 xhr = new XMLHttpRequest();
-	 xhr.open("POST", settings.url);
-	 xhr.onreadystatechange = handleResult;
-	 xhr.send(formData);
-	 */
-
 	var reader = new FileReader();
 
 	reader.onload = function(fileEvent) {
