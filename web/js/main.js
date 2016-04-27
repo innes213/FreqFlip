@@ -1,18 +1,23 @@
 /*
 Initially forked from http://jsfiddle.net/gaJyT/18/
 */
-var canvas = document.getElementById('canvas');
-var ctx = canvas.getContext('2d');
-const CANVAS_HEIGHT = canvas.height;
-const CANVAS_WIDTH = canvas.width;
-const SPACER_WIDTH = 1;
-const COL_WIDTH = 3;
+var inCanvas = document.getElementById('inputSpectrum');
+var outCanvas = document.getElementById('outputSpectrum');
+var inCtx = inCanvas.getContext('2d');
+var outCtx = outCanvas.getContext('2d');
+const CANVAS_HEIGHT = outCanvas.height;
+const CANVAS_WIDTH = outCanvas.width;
+
+const FFT_SIZE = 256;
+const NUM_BANDS = 64;
+const COL_WIDTH = CANVAS_WIDTH / NUM_BANDS;
 const BUFFER_LENGTH = 2048;
 
 var context = new (window.AudioContext || window.webkitAudioContext)();
 var source;
 var processor;
-var analyser;
+var inAnalyser;
+var outAnalyser;
 var xhr;
 
 var multiplier = [];
@@ -47,13 +52,17 @@ function createAudio() {
 	console.log("Boulding audio graph");
 	processor = context.createScriptProcessor(BUFFER_LENGTH, 1, 1);
 	processor.onaudioprocess = freqflipProcess;
-	analyser = context.createAnalyser();
-	analyser.fftSize = 256;
+	inAnalyser = context.createAnalyser();
+	inAnalyser.fftSize = FFT_SIZE;
+	outAnalyser = context.createAnalyser();
+	outAnalyser.fftSize = FFT_SIZE;
 
 	source.connect(processor);
-	processor.connect(analyser);
+	source.connect(inAnalyser);
+	processor.connect(outAnalyser);
 	processor.connect(context.destination);
 
+	console.log("Starting playback");
 	source.start(0);
 	setTimeout(disconnect, source.buffer.duration * 1000 +1000);
 	updateAnimation(0);
@@ -74,37 +83,29 @@ function freqflipProcess(e) {
 }
 
 function disconnect() {
+	console.log("Shutting graph down");
 	source.stop(0);
 	source.disconnect(0);
 	processor.disconnect(0);
-	analyser.disconnect(0);
+	inAnalyser.disconnect(0);
+	outAnalyser.disconnect(0);
 }
 
-
-
-function showSpectrum() {
-	var freqByteData = new Uint8Array(analyser.frequencyBinCount);
-	analyser.getByteFrequencyData(freqByteData);
-
+function showSpectrum(ctx, freqByteData) {
 	ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+	var binsPerBand = freqByteData.length / NUM_BANDS;
 
-	var colors = [
-		'#3369E8', // blue
-		'#D53225', // red
-		'#EEB211', // yellow
-		'#009939' // green
-	];
-
-	for (var i = 0; i < freqByteData.length; ++i) {
-
-		var magnitude = freqByteData[i];
-		var lingrad = ctx.createLinearGradient(0, CANVAS_HEIGHT, 0, CANVAS_HEIGHT - magnitude);
-
-		lingrad.addColorStop(0, colors[i % colors.length]);
-		lingrad.addColorStop(1, colors[i % colors.length]);
-		ctx.fillStyle = lingrad;
-
-		ctx.fillRect(i * SPACER_WIDTH, CANVAS_HEIGHT, COL_WIDTH, -magnitude);
+	// Draw rectangle for each frequency bin.
+	for (var i = 0; i < NUM_BANDS; i++) {
+		// Get the average magnitude for the bins in a band
+		var magnitude = 0;
+		var offset = Math.floor(i * binsPerBand);
+		for (var j = 0; j < binsPerBand; j++) {
+			magnitude += freqByteData[offset + j];
+		}
+		magnitude = .5 * magnitude / binsPerBand; //reduce by 50% to prevent clipping in vanvas. Bug?
+		ctx.fillStyle = "hsl( " + Math.round((i * 360) / NUM_BANDS) + ", 100%, 50%)";
+		ctx.fillRect(i * COL_WIDTH, CANVAS_HEIGHT, COL_WIDTH, -magnitude);
 	}
 }
 
@@ -118,7 +119,11 @@ function updateAnimation(time){
 
 	// Place all animation functions here
 	// Update meters
-	showSpectrum();
+	var freqByteData = new Uint8Array(inAnalyser.frequencyBinCount);
+	inAnalyser.getByteFrequencyData(freqByteData);
+	showSpectrum(inCtx, freqByteData);
+	outAnalyser.getByteFrequencyData(freqByteData);
+	showSpectrum(outCtx, freqByteData);
 }
 
 function dropEvent(evt) {
