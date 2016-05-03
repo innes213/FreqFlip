@@ -16,18 +16,69 @@ body {
     text-align: center;
   }
 }
-#dropArea {
-  height: 100px;
-  width: 100px;
-  background-color: $magenta;
-}
-#dropArea p {
-  text-align: center;
-  color: $white;
+
+.drop-area {
+  @include make-md-column(4);
+  @include make-md-column-offset(4);
+  .drop-box{
+    @include link-transition(500ms);
+    display: block;
+    margin: 0 auto;
+    height: 100px;
+    width: 300px;
+    cursor: pointer;
+    background-color: $white;
+    border: 3px solid $magenta;
+    border-radius: 10px;
+    color: $magenta;
+    &:hover, &:focus, &:active {
+      background: $magenta;
+      color: $white;
+    }
+  }
+  .drop-prompt {
+    line-height: 50px;
+    text-align: center;
+    vertical-align: middle;
+
+  }
 }
 
-.fft {
-  height: 100px;
-  width: 400px;
-  background: $black;
+.spectrum {
+  @include make-md-column(6);
+  .fft {
+    display: block;
+    margin: 0 auto;
+    height: 400px;
+    width: 320px;
+    background: $black;
+  }
+  .spectrum-title {
+    text-align: center;
+  }
 }
+
+//TODO: incorporate these into the sass files
+// .spectrum {
+//   position: relative;
+//   min-height: 1px;
+//   padding-left: 15px;
+//   padding-right: 15px; }
+//   @media (min-width: 992px) {
+//     .spectrum {
+//       float: left;
+//       width: 50%; } }
+//   .spectrum .fft {
+//     display: block;
+//     margin: 0 auto;
+//     height: 400px;
+//     width: 320px;
+//     background: black; }
+//   .spectrum .spectrum-title {
+//     text-align: center; }
+
+// .fft {
+//   height: 50px;
+//   width: 400px;
+//   background: black; }
+
