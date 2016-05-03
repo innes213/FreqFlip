@@ -18,17 +18,24 @@
 			<p>Reverses the spectrum of an audio file by multiplying every other sample by -1.</p>
 		</div>
 	</div>
-	<div id="dropArea">
-		<p>Drop an audio file here</p>
+	<div class="row">
+		<div class="drop-area" id="dropArea">
+			<div class="drop-box">
+				<h3 class="drop-prompt">Drop an audio file here</h3>
+			</div>
+		</div>
+		<div class="row">
+			<div class="spectrum">
+				<h2 class="spectrum-title">Input Spectrum</h2>
+				<canvas class="fft" id="inputSpectrum"></canvas>
+			</div>
+			<div class="spectrum">
+				<h2 class="spectrum-title">Output spectrum</h2>
+				<canvas class='fft' id="outputSpectrum"></canvas>
+			</div>
+		</div>
 	</div>
-	<div>
-		<p>Input Spectrum</p>
-		<canvas class="fft" id="inputSpectrum"></canvas>
-	</div>
-	<div>
-		<p>Output spectrum</p>
-		<canvas class='fft' id="outputSpectrum"></canvas>
-	</div>
+
 </div>
 	<script src="js/main.js"></script>
 </body>

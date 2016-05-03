@@ -5839,16 +5839,55 @@ body {
   .title-block .title {
     text-align: center; }
 
-#dropArea {
-  height: 100px;
-  width: 100px;
-  background-color: magenta; }
+.drop-area {
+  position: relative;
+  min-height: 1px;
+  padding-left: 15px;
+  padding-right: 15px; }
+  @media (min-width: 992px) {
+    .drop-area {
+      float: left;
+      width: 33.33333%; } }
+  @media (min-width: 992px) {
+    .drop-area {
+      margin-left: 33.33333%; } }
+  .drop-area .drop-box {
+    -webkit-transition: all 500ms ease;
+    -moz-transition: all 500ms ease;
+    -ms-transition: all 500ms ease;
+    -o-transition: all 500ms ease;
+    transition: all 500ms ease;
+    display: block;
+    margin: 0 auto;
+    height: 100px;
+    width: 300px;
+    cursor: pointer;
+    background-color: white;
+    border: 3px solid magenta;
+    border-radius: 10px;
+    color: magenta; }
+    .drop-area .drop-box:hover, .drop-area .drop-box:focus, .drop-area .drop-box:active {
+      background: magenta;
+      color: white; }
+  .drop-area .drop-prompt {
+    line-height: 50px;
+    text-align: center;
+    vertical-align: middle; }
 
-#dropArea p {
-  text-align: center;
-  color: white; }
-
-.fft {
-  height: 100px;
-  width: 400px;
-  background: black; }
+.spectrum {
+  position: relative;
+  min-height: 1px;
+  padding-left: 15px;
+  padding-right: 15px; }
+  @media (min-width: 992px) {
+    .spectrum {
+      float: left;
+      width: 50%; } }
+  .spectrum .fft {
+    display: block;
+    margin: 0 auto;
+    height: 400px;
+    width: 320px;
+    background: black; }
+  .spectrum .spectrum-title {
+    text-align: center; }
