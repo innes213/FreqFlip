@@ -11,7 +11,7 @@ const CANVAS_WIDTH = outCanvas.width;
 const FFT_SIZE = 256; // Must be power of 2
 const NUM_BANDS = 64; // Must be integer factor of FFT_SIZE/2
 const COL_WIDTH = CANVAS_WIDTH / NUM_BANDS;
-const BUFFER_LENGTH = 2048;
+const BUFFER_LENGTH = 256; //Must be even number
 
 var context;
 var source;
@@ -19,16 +19,6 @@ var processor;
 var inAnalyser;
 var outAnalyser;
 var xhr;
-
-var multiplier = [];
-
-function buildMultiplier() {
-	var i = 1;
-	while (multiplier.length < BUFFER_LENGTH) {
-		multiplier.push(i);
-		i = i * -1;
-	}
-}
 
 function initAudio(data) {
 	console.log("Initializing audio context and source");
@@ -39,7 +29,6 @@ function initAudio(data) {
 		return;
 	}
 	source = context.createBufferSource();
-	buildMultiplier();
 	if (context.decodeAudioData) {
 		context.decodeAudioData(data, function(buffer) {
 			source.buffer = buffer;
@@ -78,12 +67,14 @@ function freqflipProcess(e) {
 	var outBuff = e.outputBuffer;
 
 	for (var channel = outBuff.numberOfChannels-1; channel >= 0; channel--) {
-		var input = inBuff.getChannelData(channel);
+		// Copy input to output
 		var output = outBuff.getChannelData(channel);
-		for (var n = BUFFER_LENGTH-1; n >= 0; n-- ) {
-			output[n] = input[n] * multiplier[n];
-			//output[n] = input[n] * -1;
+		inBuff.copyFromChannel(output, channel);
+		// Multiply every other sample by -1
+		for (var n = output.length/2 -1; n >= 0; n-- ) {
+			output[n*2] = output[n*2] * -1;
 		}
+
 	}
 }
 
