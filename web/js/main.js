@@ -8,12 +8,12 @@ var outCtx = outCanvas.getContext('2d');
 const CANVAS_HEIGHT = outCanvas.height;
 const CANVAS_WIDTH = outCanvas.width;
 
-const FFT_SIZE = 256;
-const NUM_BANDS = 64;
+const FFT_SIZE = 256; // Must be power of 2
+const NUM_BANDS = 64; // Must be integer factor of FFT_SIZE/2
 const COL_WIDTH = CANVAS_WIDTH / NUM_BANDS;
 const BUFFER_LENGTH = 2048;
 
-var context = new (window.AudioContext || window.webkitAudioContext)();
+var context;
 var source;
 var processor;
 var inAnalyser;
@@ -31,10 +31,15 @@ function buildMultiplier() {
 }
 
 function initAudio(data) {
-	console.log("Initializing audio source");
-	buildMultiplier();
+	console.log("Initializing audio context and source");
+	context = new (window.AudioContext || window.webkitAudioContext)();
+	if (context == null) {
+		console.error("No Audio Context Created!");
+		window.alert("Web Audio not supported by this browser");
+		return;
+	}
 	source = context.createBufferSource();
-
+	buildMultiplier();
 	if (context.decodeAudioData) {
 		context.decodeAudioData(data, function(buffer) {
 			source.buffer = buffer;
@@ -94,6 +99,7 @@ function disconnect() {
 function showSpectrum(ctx, freqByteData) {
 	ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 	var binsPerBand = freqByteData.length / NUM_BANDS;
+	var scale = CANVAS_HEIGHT / 255;
 
 	// Draw rectangle for each frequency bin.
 	for (var i = 0; i < NUM_BANDS; i++) {
@@ -103,7 +109,7 @@ function showSpectrum(ctx, freqByteData) {
 		for (var j = 0; j < binsPerBand; j++) {
 			magnitude += freqByteData[offset + j];
 		}
-		magnitude = .5 * magnitude / binsPerBand; //reduce by 50% to prevent clipping in vanvas. Bug?
+		magnitude = scale * magnitude / binsPerBand;
 		ctx.fillStyle = "hsl( " + Math.round((i * 360) / NUM_BANDS) + ", 100%, 50%)";
 		ctx.fillRect(i * COL_WIDTH, CANVAS_HEIGHT, COL_WIDTH, -magnitude);
 	}
